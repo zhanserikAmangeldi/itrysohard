@@ -12,6 +12,10 @@ class ProfileManager {
         self.delegate = delegate
     }
     
+    func getActiveProfiles() -> [UUID: UserProfile] {
+        return activeProfiles
+    }
+    
     func loadProfile(id: UUID, completion: @escaping (Result<UserProfile, Error>) -> Void) {
         DispatchQueue.global().async { [weak self] in
             guard let self = self else { return }

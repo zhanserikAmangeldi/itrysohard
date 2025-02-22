@@ -10,7 +10,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         let profileManager = ProfileManager(delegate: nil)
         let imageLoader = ImageLoader()
-        let viewModel = FeedViewModel(profileManager: profileManager, imageLoader: imageLoader)
+        let viewModel = FeedSystem(profileManager: profileManager, imageLoader: imageLoader)
         
         let feedVC = FeedViewController(viewModel: viewModel)
         let navigationController = UINavigationController(rootViewController: feedVC)

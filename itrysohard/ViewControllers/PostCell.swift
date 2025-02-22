@@ -55,6 +55,13 @@ class PostCell: UITableViewCell {
         ])
     }
     
+    var onDelete: (() -> Void)?
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        selectionStyle = .none
+    }
+    
     func configure(with post: Post, profile: UserProfile?, imageLoader: ImageLoader) {
         contentLabel.text = post.content
         likesLabel.text = "\(post.likes) likes"
@@ -64,6 +71,46 @@ class PostCell: UITableViewCell {
             imageLoader.loadImage(url: profile.imageUrl) { [weak self] image in
                 self?.profileImageView.image = image
             }
+        }
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
+        contentView.addGestureRecognizer(longPress)
+    }
+    
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+            if gesture.state == .began {
+                showDeleteAlert()
+            }
+        }
+        
+    private func showDeleteAlert() {
+        guard let viewController = self.findViewController() else { return }
+        
+        let alert = UIAlertController(
+            title: "Delete Post",
+            message: "Are you sure you want to delete this post?",
+            preferredStyle: .actionSheet
+        )
+        
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.onDelete?()
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        viewController.present(alert, animated: true)
+    }
+}
+
+
+extension UIView {
+    func findViewController() -> UIViewController? {
+        if let nextResponder = self.next as? UIViewController {
+            return nextResponder
+        } else if let nextResponder = self.next as? UIView {
+            return nextResponder.findViewController()
+        } else {
+            return nil
         }
     }
 }

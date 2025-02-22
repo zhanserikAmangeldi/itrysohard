@@ -2,11 +2,11 @@ import UIKit
 import Foundation
 
 class FeedViewController: UIViewController, UICollectionViewDelegate {
-    private let viewModel: FeedViewModel
+    private let viewModel: FeedSystem
     private let tableView = UITableView()
     private let hashtagFilterView = HashtagFilterView()
     
-    init(viewModel: FeedViewModel) {
+    init(viewModel: FeedSystem) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -19,8 +19,30 @@ class FeedViewController: UIViewController, UICollectionViewDelegate {
         super.viewDidLoad()
         setupUI()
         configureHashtags()
+        setupNavigationBar()
     }
     
+    
+    private func setupNavigationBar() {
+        navigationItem.title = "Feed"
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .add,
+            target: self,
+            action: #selector(addPostTapped)
+        )
+    }
+    
+    @objc private func addPostTapped() {
+        let postCreationVC = PostCreationViewController(viewModel: viewModel) { [weak self] post in
+            self?.viewModel.addPost(post)
+            self?.tableView.reloadData()
+            self?.hashtagFilterView.configure(with: self?.viewModel.uniqueHashtags ?? [])
+        }
+        
+        let nav = UINavigationController(rootViewController: postCreationVC)
+        present(nav, animated: true)
+    }
+
     private func configureHashtags() {
         hashtagFilterView.hashtagDelegate = self
         hashtagFilterView.configure(with: viewModel.uniqueHashtags)
@@ -54,6 +76,9 @@ class FeedViewController: UIViewController, UICollectionViewDelegate {
 }
 
 extension FeedViewController: UITableViewDelegate, UITableViewDataSource {
+    
+
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfPosts
     }
@@ -62,7 +87,14 @@ extension FeedViewController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as! PostCell
         let post = viewModel.getPost(at: indexPath.row)
         let profile = viewModel.getProfile(for: post)
+        
         cell.configure(with: post, profile: profile, imageLoader: viewModel.imageLoader)
+        
+        cell.onDelete = { [weak self] in
+            self?.viewModel.removePost(post)
+            self?.tableView.reloadData()
+        }
+        
         return cell
     }
     
